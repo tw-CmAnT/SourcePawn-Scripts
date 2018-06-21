@@ -22,8 +22,7 @@ public Action Command_Tag(int Client, int Args)
 	GetCmdArg(1, buffer, sizeof(buffer));
 	
 	char tag[5];
-	Format(tag, sizeof(tag), "[%s]", tag);
-	strcopy(tag, sizeof(tag), buffer);
+	Format(tag, sizeof(tag), "[%s]", buffer
 	CS_SetClientClanTag(Client, tag);
 	PrintToChat(Client, "Your tag was set to %s", tag);
 	
