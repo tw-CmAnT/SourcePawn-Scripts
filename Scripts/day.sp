@@ -88,7 +88,7 @@ public Action Command_Reset(int client, int args)
 
 public int SpecialDay(Menu menu, MenuAction action, int param1, int param2)
 {
-    if(action == MenuAction_Select)
+    if (action == MenuAction_Select)
     {
         char sInfo[8];
         if(!menu.GetItem(param2, sInfo, sizeof(sInfo),_, sDay, sizeof(sDay))) /* param2 is the place of the option (0 is option 1, 1 is optin 2...)
@@ -99,39 +99,8 @@ public int SpecialDay(Menu menu, MenuAction action, int param1, int param2)
         PrintToChatAll("%s Today is a \x0F%s!", prefix, sDay);
         PrintToChatAll("%s Today is a \x0F%s!", prefix, sDay);
         EmitSoundToAll("warden/enter.mp3");
-        
-    /*
-      	if (StrEqual(sInfo, "purge"))
-        {
-            PrintToChatAll("Today is a Purge Day!");
-            EmitSoundToAll(); // EmitSound has a lot of quirks in csgo - see https://github.com/powerlord/sourcemod-snippets/blob/master/scripting/include/emitsoundany.inc
-        }
-        else if (StrEqual(sInfo, "panda"))
-        {
-            PrintToChatAll("Today is a Panday Freeday!");
-            EmitSoundToAll();
-        }
-        else if (StrEqual(sInfo, "zombie"))
-        {
-            PrintToChatAll("Today is a Zombie Freeday!");
-            EmitSoundToAll();
-        }
-        else if (StrEqual(sInfo, "ssd"))
-        {
-            PrintToChatAll("Today is a Super Strict Day!");
-            EmitSoundToAll();
-        }
-        else if (StrEqual(sInfo, "warday"))
-        {
-            PrintToChatAll("Today is a Warday");
-            EmitSoundToAll();
-        }
-	
-	dont do anything here for now
-    */
-       
     }
-    else if(action == MenuAction_End)
+    else if (action == MenuAction_End)
     {
         delete menu;
     }
@@ -144,7 +113,7 @@ public bool IsAvailable()
  
 public void warden_OnWardenCreated(int warden)
 {
-	if(IsAvailable())
+	if (IsAvailable())
    			PrintToChat(warden, "%s You can call a special day this round by using sm_day ", prefix);
 }
 
