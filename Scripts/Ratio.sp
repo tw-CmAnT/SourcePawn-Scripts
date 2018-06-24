@@ -30,7 +30,7 @@ public Action Event_Swap(Event event, const char[] name, bool dontBroadcast) // 
 	int team = GetEventInt(event, "team");
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
-	if (team == CS_TEAM_T)
+	if (team == CS_TEAM_CT)
 	{
 		if (GetTeamClientCount(CS_TEAM_T) == 0)
 		{
