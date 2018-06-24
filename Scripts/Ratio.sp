@@ -7,7 +7,7 @@ public Plugin myinfo =
 {
         name = "Ratio Plugin",
         author = "CmAnT",
-        description = "Prevents the players from breaking ratio.",
+        description = "Prevents the players from breaking ratio in many ways.",
         version = "1.1",
         url = "tangoworldwide.net"
 };
@@ -36,13 +36,14 @@ public Action Event_Swap(Event event, const char[] name, bool dontBroadcast) // 
 		if (oldTeam == CS_TEAM_SPECTATOR)
 		{
 			PrintToChat(client, "%s Sorry, you can't switch from Spectator to CT. You have been swapped to the \x0FT\x01 side.", prefix);
-			ChangeClientTeam(client, CS_TEAM_T);
+			CreateTimer(3.0, Swap, TIMER_REPEAT);
 		}
 		
-		if (GetTeamClientCount(CS_TEAM_T) == 0)
+		else if (GetTeamClientCount(CS_TEAM_T) == 0)
 		{
 			PrintToChat(client, "%s Ratio is still broken. You have been swapped back to T.", prefix);
-			ChangeClientTeam(client, CS_TEAM_T)
+			ChangeClientTeam(client, CS_TEAM_T);
+			return Plugin_Handled;
 		}
 	
 		else if (BreaksRatio())
@@ -87,6 +88,12 @@ public Action Event_RoundEnd(Event event, const char[] name, bool dontBroadcast)
 	}
 	
 	return Plugin_Continue;
+}
+
+public Action Swap(Handle timer, int client)
+{
+	ChangeClientTeam(client, CS_TEAM_T);
+	return Plugin_Handled;
 }
 
 public bool BreaksRatio()
