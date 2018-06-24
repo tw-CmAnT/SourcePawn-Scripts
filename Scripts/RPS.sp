@@ -21,9 +21,9 @@ public void OnPluginStart()
 }
 
 // Global vars:
-char aClient[MAXPLAYERS];
-char aTarget[MAXPLAYERS];
-int aTargetI[MAXPLAYERS];
+char aClient[MAXPLAYERS + 1];
+char aTarget[MAXPLAYERS + 1];
+int aTargetI[MAXPLAYERS + 1];
 
 public Action Command_RPS(int client, int args)
 {	
@@ -121,7 +121,7 @@ void DisplayPlayerMenu(int client)
 	player.Display(client, MENU_TIME_FOREVER);
 }
 
-public int Check(char[] r1, char[] r2)
+int Check(char[] r1, char[] r2)
 {
 	if (StrEqual(r1, r2))
 		return 0;
