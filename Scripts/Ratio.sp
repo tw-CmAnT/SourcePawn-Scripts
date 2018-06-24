@@ -8,7 +8,7 @@ public Plugin myinfo =
         name = "Ratio Plugin",
         author = "CmAnT",
         description = "Prevents the players from breaking ratio.",
-        version = "1.0.0",
+        version = "1.1",
         url = "tangoworldwide.net"
 };
 
@@ -27,11 +27,18 @@ public void OnPluginStart()
 // when someone swaps to CT:
 public Action Event_Swap(Event event, const char[] name, bool dontBroadcast) // event template
 {
-	int team = GetEventInt(event, "team");
+	int team = event.GetInt("team");
 	int client = GetClientOfUserId(event.GetInt("userid"));
+	int oldTeam = event.GetInt("oldteam");
 	
 	if (team == CS_TEAM_CT)
 	{
+		if (oldTeam == CS_TEAM_SPECTATOR)
+		{
+			PrintToChat(client, "%s Sorry, you can't switch from Spectator to CT. You have been swapped to the \x0FT\x01 side.", prefix);
+			ChangeClientTeam(client, CS_TEAM_T);
+		}
+		
 		if (GetTeamClientCount(CS_TEAM_T) == 0)
 		{
 			PrintToChat(client, "%s Ratio is still broken. You have been swapped back to T.", prefix);
