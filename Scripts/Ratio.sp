@@ -30,12 +30,12 @@ public Action Event_Swap(Event event, const char[] name, bool dontBroadcast) // 
 	int team = GetEventInt(event, "team");
 	int client = GetClientOfUserId(event.GetInt("userid"));
 	
-	if (team == 3)
+	if (team == CS_TEAM_T)
 	{
 		if (GetTeamClientCount(CS_TEAM_T) == 0)
 		{
 			PrintToChat(client, "%s Ratio is still broken. You have been swapped back to T.", prefix);
-			ChangeClientTeam(client, 2)
+			ChangeClientTeam(client, CS_TEAM_T)
 		}
 	
 		else if (BreaksRatio())
@@ -90,12 +90,6 @@ public bool BreaksRatio()
 public void OnMapStart()
 {
     round = -1;
-}
-
-public Action Swap(Handle Timer, int client)
-{
-	ChangeClientTeam(client, 2);
-	return Plugin_Handled;
 }
 
 public bool isValidClient(int client)
