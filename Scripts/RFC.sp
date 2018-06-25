@@ -17,10 +17,10 @@ public Plugin myinfo =
 
 public void OnPluginStart()
 {
-	RegConsoleCmd("sm_rfc", Command_rfc);
+	RegConsoleCmd("sm_rfc", Command_RFC);
 }
 
-public Action Command_rfc(int client, int args)
+public Action Command_RFC(int client, int args)
 {
 	DisplayRfcMenu(client);
 	return Plugin_Handled;
@@ -31,13 +31,13 @@ public int MenuHandler_rfc(Menu menu, MenuAction action, int param1, int param2)
 	if (action == MenuAction_Select)
 	{
 		int client = param1;
-		char number[3];
-		if (!menu.GetItem(param2, number, sizeof(number)))
+		char buffer[3];
+		if (!menu.GetItem(param2, buffer, sizeof(buffer)))
 			return;
 		int random = GetRandomInt(1, 5);
-		int numberI = StringToInt(number)
-		PrintToChat(client, "%s You choose \x0F%d\x01, the chosen number was \x0F%d\x01.", prefix, numberI, random);
-		if (numberI == random)
+		int number = StringToInt(buffer)
+		PrintToChat(client, "%s You choose \x0F%d\x01, the chosen number was \x0F%d\x01.", prefix, number, random);
+		if (number == random)
 			PrintToChat(client, "%s You \x04win\x01!", prefix);
 		else
 			PrintToChat(client, "%s You \x0FLose\x01!", prefix)
