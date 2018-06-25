@@ -9,7 +9,7 @@ public Plugin myinfo =
         name = "Special Days",
         author = "CmAnT",
         description = "Makes special days better and easier to do",
-        version = "1.0.0",
+        version = "1.1",
         url = "tangoworldwide.net"
 };
  
@@ -20,21 +20,21 @@ public void OnPluginStart()
 {
     HookEvent("round_start", Event_RoundStart);
     RegConsoleCmd("sm_day", Command_Day);
-    RegAdminCmd("sm_rd", Command_Reset, ADMFLAG_SLAY);
+    RegAdminCmd("sm_rday", Command_Reset, ADMFLAG_SLAY);
 }
  
-public Action Command_Day(int Client, int Args)
+public Action Command_Day(int client, int Args)
 {
-	if (!warden_exists()) // if there's no warden taken
-		PrintToChat(Client, "%s Warden has not been taken!", prefix);
+	if (!Warden_Exists()) // if there's no warden taken
+		PrintToChat(client, "%s Warden has not been taken!", prefix);
        
-   	else if (warden_iswarden(Client))
+   	else if (warden_iswarden(client))
     {
         int timeLeft;
         GetMapTimeLeft(timeLeft);
         if (timeLeft > (9 * 60 + 25)) // if its before 9:25
         {
-            if(IsAvailable())
+            if (IsAvailable())
             {      
                 Menu menu = new Menu(SpecialDay);
                 menu.SetTitle("Pick a special day!");
@@ -44,30 +44,30 @@ public Action Command_Day(int Client, int Args)
                 menu.AddItem("ssd", "Super Strict Day");
                 menu.AddItem("warday", "Warday");
                 menu.AddItem("kangaroo", "Kangaroo Freeday");
-                menu.Display(Client, 10);
+                menu.Display(client, 10);
            
                 round = 0;
             }
             else
             {
             	strcopy(sDay, sizeof(sDay), "Regular Day");
-                int x = 5 - round;
-                PrintToChat(Client, "%s You have to wait \x0F%d \x01more rounds to call a special day!", prefix, x);
+                int roundsLeft = 5 - round;
+                PrintToChat(client, "%s You have to wait \x0F%d \x01more rounds to call a special day!", prefix, roundsLeft);
             }
         }
         else
         {
-            PrintToChat(Client, "%s You are not allowed to use this command after 9:25.", prefix);
+            PrintToChat(client, "%s You are not allowed to use this command after 9:25.", prefix);
         }
     }
    
    	else
     {
     	if (StrEqual(sDay, "")) // if sDay has no value
-    		PrintToChat(Client, "%s Warden has not picked a day yet.", prefix);
+    		PrintToChat(client, "%s Warden has \x0Fnot\x01 picked a day yet.", prefix);
     	
     	else
-        	PrintToChat(Client, "%s Today is a \x0F%s!", prefix, sDay);
+        	PrintToChat(client, "%s Today is a \x0F%s\x01!", prefix, sDay);
     }
    
    	return Plugin_Handled;
@@ -75,12 +75,12 @@ public Action Command_Day(int Client, int Args)
  
 public Action Command_Reset(int client, int args)
 {
-	if(round > 0)
-		PrintToChat(client, "%s You can only use this command on a special day!", prefix);
-	else if(round == 0)
+	if (round > 0)
+		PrintToChat(client, "%s You can only use this command on a \x0Fspecial day\x01!", prefix);
+	else if (round == 0)
 	{
 		round = 4;
-		PrintToChatAll("%s Today is NOT a special day!", prefix);
+		PrintToChatAll("%s Today is \x0Fno longer\x01 a special day!", prefix);
 	}
 	
 	return Plugin_Handled;
@@ -88,7 +88,7 @@ public Action Command_Reset(int client, int args)
 
 public int SpecialDay(Menu menu, MenuAction action, int param1, int param2)
 {
-    if (action == MenuAction_Select)
+    if(action == MenuAction_Select)
     {
         char sInfo[8];
         if(!menu.GetItem(param2, sInfo, sizeof(sInfo),_, sDay, sizeof(sDay))) /* param2 is the place of the option (0 is option 1, 1 is optin 2...)
@@ -97,15 +97,16 @@ public int SpecialDay(Menu menu, MenuAction action, int param1, int param2)
        
         PrintToChatAll("%s Today is a \x0F%s!", prefix, sDay);
         PrintToChatAll("%s Today is a \x0F%s!", prefix, sDay);
-        PrintToChatAll("%s Today is a \x0F%s!", prefix, sDay);
-        EmitSoundToAll("warden/enter.mp3");
+        PrintToChatAll("%s	 Today is a \x0F%s!", prefix, sDay);
+        PrintToChatAll("%s If you don't know what a \x0F%s\x01 is, make sure you do \x0F!dinfo", prefix, sDay);
+        EmitSoundToAll("warden/enter.mp3"); 
     }
-    else if (action == MenuAction_End)
+    else if(action == MenuAction_End)
     {
         delete menu;
     }
 }
- 
+
 public bool IsAvailable()
 {
     return round >= 5;
@@ -113,7 +114,7 @@ public bool IsAvailable()
  
 public void warden_OnWardenCreated(int warden)
 {
-	if (IsAvailable())
+	if(IsAvailable())
    			PrintToChat(warden, "%s You can call a special day this round by using sm_day ", prefix);
 }
 
@@ -137,7 +138,8 @@ public bool warden_exists()
 {
     for (int i = 1; i <= MaxClients; i++)
     {
-        if (IsClientInGame(i) && warden_iswarden(i))return true;
+        if (IsClientInGame(i) && warden_iswarden(i))
+        	return true;
     }
     return false;
 }
