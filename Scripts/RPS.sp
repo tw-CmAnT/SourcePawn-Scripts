@@ -8,11 +8,11 @@
 
 public Plugin myinfo =
 {
-        name = "RPS",
-        author = "CmAnT",
-        description = "You can play rock, paper, scissors with your friends!",
-        version = "1.0.0",
-        url = "tangoworldwide.net"
+	name = "RPS",
+	author = "CmAnT",
+    description = "You can play rock, paper, scissors with your friends!",
+	version = "1.0.0",
+	url = "tangoworldwide.net"
 };
 
 public void OnPluginStart()
@@ -21,9 +21,9 @@ public void OnPluginStart()
 }
 
 // Global vars:
-char aClient[MAXPLAYERS + 1];
-char aTarget[MAXPLAYERS + 1];
-int aTargetI[MAXPLAYERS + 1];
+char aClient[MAXPLAYERS + 1]; // Client's choice
+char aTarget[MAXPLAYERS + 1]; // Target's choice
+int aTargetI[MAXPLAYERS + 1]; // Target's index
 
 public Action Command_RPS(int client, int args)
 {	
@@ -99,6 +99,9 @@ public int MenuHandler_RPS(Menu menu, MenuAction action, int param1, int param2)
 				PrintToChat(aTargetI[param1], "%s You picked %s, %s picked %s. You won!", prefix, aTarget[param1], name, aClient[param1]);
 			}
 		}
+		
+		aClient[param1] = "";
+		aTarget[param1] = "";
 	}
 }
 
