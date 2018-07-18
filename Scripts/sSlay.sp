@@ -34,6 +34,7 @@ public Action Command_sSlay(int client, int args)
 	GetClientName(client, clientName, sizeof(clientName));
 	
 	char pattern[32];
+	int length = GetCmdArg(1, pattern, sizeof(pattern));
 	GetCmdArg(1, pattern, sizeof(pattern));
 	
 	char targetName[32];
@@ -48,11 +49,19 @@ public Action Command_sSlay(int client, int args)
 		return Plugin_Handled;
 	}
 	
-	char reason[32];
-	GetCmdArg(2, reason, sizeof(reason));
 	
-	PrintToChatAll("%s \x0F%s\x01 slayed \x0F%s\x01 for \x04%s\x01.", prefix, clientName, pattern, reason);
-	ForcePlayerSuicide(targetsFound);
+	char text[100];
+	GetCmdArgString(text, sizeof(text));
+	
+	char reason[100]
+	strcopy(reason, sizeof(reason), text[length]);
+	
+	PrintToChatAll("%s \x0F%s\x01 slayed \x0F%s\x01 for \x04%s\x01.", prefix, clientName, targetName, reason);
+	
+	for (int i = 0; i < targetsFound; i++)
+	{
+		ForcePlayerSuicide(targets[i]);
+	}
 	
 	return Plugin_Handled;
 	
