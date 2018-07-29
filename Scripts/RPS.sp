@@ -115,6 +115,12 @@ public int MenuHandler_RPS(Menu menu, MenuAction action, int param1, int param2)
 			DisplayResults(param1, g_iOpponent[param1]);
 		}
 	}
+	else if (action == MenuAction_End)
+	{
+		ClearArrays(g_iOpponent[param1]);
+		ClearArrays(param1);
+		delete menu;
+	}
 }
 
 void DisplayRPSMenu(int client)
