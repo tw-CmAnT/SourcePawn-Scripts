@@ -47,6 +47,7 @@ public Action Command_Accept(int client, int args)
 		DisplayRPSMenu(client);
 		DisplayRPSMenu(g_iOpponent[client]);
 	}
+	return Plugin_Handled;
 }
 
 public Action Command_Decline(int client, int args)
@@ -59,6 +60,7 @@ public Action Command_Decline(int client, int args)
 		PrintToChat(g_iOpponent[client], "%s Your opponent has \x0Fdeclined\x01 your request.", prefix);
 		ClearArrays(client);
 	}
+	return Plugin_Handled;
 }
 
 public int MenuHandler_Player(Menu menu, MenuAction action, int param1, int param2)
@@ -68,17 +70,25 @@ public int MenuHandler_Player(Menu menu, MenuAction action, int param1, int para
 		char info[64];
 		if (!menu.GetItem(param2, info, sizeof(info)))
     		return;
+    	
 		g_iOpponent[param1] = GetClientOfUserId(StringToInt(info));
+		// Check if player is already in a rps game
+		if (g_bAccept[g_iOpponent[param1]])
+		{
+			PrintToChat(param1, "%s Player is already in a RPS game. Request \x0Fdeclined\x01.", prefix);
+			ClearArrays(param1);
+			return;
+		}
 		
 		g_iOpponent[g_iOpponent[param1]] = param1;
 		
 		if (g_iOpponent[param1] == 0)
 			return;
 		
-		char targetName[32];
+		char targetName[MAX_NAME_LENGTH];
 		GetClientName(g_iOpponent[param1], targetName, sizeof(targetName)); // target's name
 	
-		char clientName[32];
+		char clientName[MAX_NAME_LENGTH];
 		GetClientName(param1, clientName, sizeof(clientName)); // client's name
 		
 		// check if player accepted, else ClearArrays
@@ -99,7 +109,7 @@ public int MenuHandler_RPS(Menu menu, MenuAction action, int param1, int param2)
 {
 	if (action == MenuAction_Select)
 	{
-		char buffer[32];
+		char buffer[MAX_NAME_LENGTH];
 		menu.GetItem(param2, buffer, sizeof(buffer));
 		g_iChoice[param1] = buffer[0];
 		char info[64];
@@ -155,26 +165,26 @@ int Check(char[] r1, char[] r2)
 	}
 }
 
-void GetChoices(int r, char rps[9])
+void GetChoices(int r, char[] rps, int maxlen)
 {
 	if (r == 0)
-		strcopy(rps, sizeof(rps), "Rock");
+		strcopy(rps, maxlen, "Rock");
 	else if (r == 1)
-		strcopy(rps, sizeof(rps), "Paper");
+		strcopy(rps, maxlen, "Paper");
 	else if (r == 2)
-		strcopy(rps, sizeof(rps), "Scissors");
+		strcopy(rps, maxlen, "Scissors");
 }
 
 void DisplayResults(int client, int target)
 {
-	char targetName[32];
+	char targetName[MAX_NAME_LENGTH];
 	GetClientName(target, targetName, sizeof(targetName)); // target's name
 	
-	char clientName[32];
+	char clientName[MAX_NAME_LENGTH];
 	GetClientName(client, clientName, sizeof(clientName)); // client's name
 
-	GetChoices(g_iChoice[client], g_sChoice[client]);
-	GetChoices(g_iChoice[target], g_sChoice[target]);
+	GetChoices(g_iChoice[client], g_sChoice[client], sizeof(g_sChoice[]));
+	GetChoices(g_iChoice[target], g_sChoice[target], sizeof(g_sChoice[]));
 	
 	int result = Check( g_sChoice[client], g_sChoice[target]);
 	
