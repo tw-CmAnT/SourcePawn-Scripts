@@ -28,10 +28,18 @@ int g_iOpponent[MAXPLAYERS + 1]; // Opponent's index
 char g_sChoice[MAXPLAYERS + 1][9]; // Client's choice 
 bool g_bListening[MAXPLAYERS + 1]; // true to listen to player's chat
 bool g_bAccept[MAXPLAYERS + 1]; // true if accepted RPS challenge, else false
+bool g_bInGame[MAXPLAYERS + 1]; // true if player is in a game
 
 
 public Action Command_RPS(int client, int args)
 {	
+	if (g_bInGame[client])
+	{
+		PrintToChat(client, "%s You're already in a game.", prefix);
+		return Plugin_Handled;
+	}
+	
+	ClearArrays(client);
 	DisplayPlayerMenu(client);
 	
 	return Plugin_Handled;
@@ -42,6 +50,8 @@ public Action Command_Accept(int client, int args)
 	if (g_bListening[client])
 	{
 		g_bAccept[client] = true;
+		g_bInGame[client] = true;
+		g_bInGame[g_iOpponent[client]] = true;
 		g_iChoice[client] = -1;
 		g_iChoice[g_iOpponent[client]] = -1;
 		DisplayRPSMenu(client);
@@ -67,13 +77,14 @@ public int MenuHandler_Player(Menu menu, MenuAction action, int param1, int para
 {
 	if (action == MenuAction_Select)
 	{
+		
 		char info[64];
 		if (!menu.GetItem(param2, info, sizeof(info)))
     		return;
     	
 		g_iOpponent[param1] = GetClientOfUserId(StringToInt(info));
 		// Check if player is already in a rps game
-		if (g_bAccept[g_iOpponent[param1]])
+		if (g_bInGame[g_iOpponent[param1]])
 		{
 			PrintToChat(param1, "%s Player is already in a RPS game. Request \x0Fdeclined\x01.", prefix);
 			ClearArrays(param1);
@@ -96,7 +107,7 @@ public int MenuHandler_Player(Menu menu, MenuAction action, int param1, int para
 		PrintToChat(g_iOpponent[param1], "%s %s wants to play RPS with you, type \x04!rpsyes\x01 to play, and \x0F!rpsno\x01 to decline.", prefix, clientName);
 		g_bListening[g_iOpponent[param1]] = true;
 		
-		CreateTimer(30.0, TerminateChallenge, param1);
+		CreateTimer(30.0, TerminateChallenge, GetClientUserId(param1));
 		
 		return;
 		
@@ -186,7 +197,7 @@ void DisplayResults(int client, int target)
 	GetChoices(g_iChoice[client], g_sChoice[client], sizeof(g_sChoice[]));
 	GetChoices(g_iChoice[target], g_sChoice[target], sizeof(g_sChoice[]));
 	
-	int result = Check( g_sChoice[client], g_sChoice[target]);
+	int result = Check(g_sChoice[client], g_sChoice[target]);
 	
 	if (result == 0) // tie
 	{
@@ -210,6 +221,11 @@ void DisplayResults(int client, int target)
 
 public void OnClientDisconnect(int client)
 {
+	if (g_bInGame[client])
+	{
+		PrintToChat(g_iOpponent[client], "%s Your opponent has disconnected.", prefix);
+		ClearArrays(g_iOpponent[client]);
+	}
 	ClearArrays(client);
 }
 
@@ -220,16 +236,18 @@ void ClearArrays(int client)
 	g_iOpponent[client] = -1;
 	g_bAccept[client] = false;
 	g_bListening[client] = false;
+	g_bInGame[client] = false;
 }
 
-public Action TerminateChallenge(Handle timer, int client)
+public Action TerminateChallenge(Handle timer, int userid)
 {
-	if (!g_bAccept[client])
+	int client = GetClientOfUserId(userid);
+	
+	if (!g_bAccept[client] || !g_bInGame[client])
 	{
 		ClearArrays(g_iOpponent[client]);
 		PrintToChat(g_iOpponent[client], "%s You have \x0Fdeclined\x01 the request.", prefix);
 		PrintToChat(client, "%s Your opponent has \x0Fdeclined\x01 your request.", prefix);
 		ClearArrays(client);
 	}
-	return Plugin_Continue;
 }
