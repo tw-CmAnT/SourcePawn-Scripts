@@ -29,6 +29,7 @@ char g_sChoice[MAXPLAYERS + 1][9]; // Client's choice
 bool g_bListening[MAXPLAYERS + 1]; // true to listen to player's chat
 bool g_bAccept[MAXPLAYERS + 1]; // true if accepted RPS challenge, else false
 bool g_bInGame[MAXPLAYERS + 1]; // true if player is in a game
+bool g_bRequested[MAXPLAYERS + 1]; // true if client is asked to play a game
 
 
 public Action Command_RPS(int client, int args)
@@ -51,6 +52,7 @@ public Action Command_Accept(int client, int args)
 	{
 		g_bAccept[client] = true;
 		g_bInGame[client] = true;
+		g_bListening[client] = false;
 		g_bInGame[g_iOpponent[client]] = true;
 		g_iChoice[client] = -1;
 		g_iChoice[g_iOpponent[client]] = -1;
@@ -92,6 +94,8 @@ public int MenuHandler_Player(Menu menu, MenuAction action, int param1, int para
 		}
 		
 		g_iOpponent[g_iOpponent[param1]] = param1;
+		g_bInGame[param1] = true;
+		g_bInGame[g_iOpponent[param1]] = true;
 		
 		if (g_iOpponent[param1] == 0)
 			return;
@@ -231,19 +235,23 @@ public void OnClientDisconnect(int client)
 
 void ClearArrays(int client)
 {
-	g_sChoice[client] = " ";
-	g_iChoice[client] = -1;
-	g_iOpponent[client] = -1;
-	g_bAccept[client] = false;
-	g_bListening[client] = false;
-	g_bInGame[client] = false;
+	if (client < MaxClients && client > 0)
+	{
+		g_sChoice[client] = " ";
+		g_iChoice[client] = -1;
+		g_iOpponent[client] = -1;
+		g_bAccept[client] = false;
+		g_bListening[client] = false;
+		g_bInGame[client] = false;
+		g_bRequested[client] = false;
+	}
 }
 
 public Action TerminateChallenge(Handle timer, int userid)
 {
 	int client = GetClientOfUserId(userid);
 	
-	if (!g_bAccept[client] || !g_bInGame[client])
+	if (!g_bAccept[client] && !g_bInGame[client] && g_bListening[client])
 	{
 		ClearArrays(g_iOpponent[client]);
 		PrintToChat(g_iOpponent[client], "%s You have \x0Fdeclined\x01 the request.", prefix);
