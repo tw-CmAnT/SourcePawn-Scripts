@@ -1,22 +1,19 @@
-// include:
 #include <sourcemod>
 #include <sdktools>
 #include <cstrike>
 #include <ctban>
- 
-// define:
-#define prefix "[\x0FCTQuiz\x01]"
+
+#define PLUGIN_PREFIX "[\x0FCTQuiz\x01]"
 
 public Plugin myinfo =
 {
-    name = "new ct quiz",
+    name = "CTQuiz",
     author = "CmAnT",
-    description = "Asks a question when someone swaps to CT in order to prevent clueless  players to join CT.",
+    description = "Asks a question when someone swaps to CT in order to reduce the amount of rule breakers on CT.",
     version = "1.0",
     url = "git.tangoworldwide.net/cmant"
 };
  
-// global vars:
 char g_sQuestionPath[PLATFORM_MAX_PATH];
 ArrayList g_alQuestions;
  
@@ -24,7 +21,7 @@ public void OnPluginStart()
 {
     HookEvent("player_team", Event_SwapTeam, EventHookMode_Pre);
    
-    BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/Questions.cfg");
+    BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/ctquiz_questions.cfg");
     g_alQuestions = CreateArray();
    
     if (!LoadQuestions())
@@ -49,15 +46,14 @@ public int MenuHandler_Quesiton(Menu menu, MenuAction action, int param1, int pa
     {
         char info[64];
         char display[64];
-        if (!menu.GetItem(param2, info, sizeof(info)))
+        if (!menu.GetItem(param2, info, sizeof(info), _, display, sizeof(display)))
         {
             return;
         }
-       
-        menu.GetItem(param2, info, sizeof(info), _, display, sizeof(display));
-        if (StrEqual(info, "correct"))
+
+        if (StrEqual(info, "correct", false))
         {
-            PrintToChat(param1, "%s You're \x04correct\x01, you may join CT now.", prefix);
+            PrintToChat(param1, "%s You're \x04correct\x01, you may join CT now.", PLUGIN_PREFIX);
         }
         else
         {
@@ -156,6 +152,6 @@ StringMap GetRandomQuestion()
  
 void Punish(int client)
 {
-    PrintToChat(client, "%s \x02Incorrect\x01, you're a bad CT.");
-    CTBan_Client(client, 15, _, "CTQuiz ban - Client answered incorrectly.");
+    PrintToChat(client, "%s \x02Incorrect\x01, you're a bad CT.", PLUGIN_PREFIX);
+    CTBan_Client(client, 15, _, "CT Quiz - Failed quiz");
 }
