@@ -13,7 +13,8 @@ public Plugin myinfo =
     version = "1.0",
     url = "git.tangoworldwide.net/cmant"
 };
- 
+
+ConVar g_cvBanTime;
 char g_sQuestionPath[PLATFORM_MAX_PATH];
 ArrayList g_alQuestions;
  
@@ -23,7 +24,10 @@ public void OnPluginStart()
    
     BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/ctquiz_questions.cfg");
     g_alQuestions = CreateArray();
-   
+    
+    g_cvBanTime = CreateConVar("ctquiz_ctban_time", "10", "For how long the client is going to be ctbanned after answering incorrectly.", _,true, 1.0);
+    AutoExecConfig(true, "ctquiz");
+    
     if (!LoadQuestions())
     {
         SetFailState("Unable to locate Questions.cfg at %s", g_sQuestionPath);
@@ -40,7 +44,7 @@ public Action Event_SwapTeam(Event event, const char[] name, bool dontBroadcast)
     }
 }
  
-public int MenuHandler_Quesiton(Menu menu, MenuAction action, int param1, int param2)
+public int MenuHandler_Question(Menu menu, MenuAction action, int param1, int param2)
 {
     if (action == MenuAction_Select)
     {
@@ -60,10 +64,19 @@ public int MenuHandler_Quesiton(Menu menu, MenuAction action, int param1, int pa
             Punish(param1);
         }
     }
-    else if (action == MenuAction_Cancel && param2 == MenuCancel_Timeout)
+    else if (action == MenuAction_Cancel)
     {
-        Punish(param1);
-    }
+    	if (param2 == MenuCancel_Timeout)
+   		{
+   			Punish(param1);
+   		}
+    	else if (param2 == MenuCancel_Interrupted)
+    	{
+    		PrintToChat(param1, "%s You have opened another menu. You have been swapped back to T.", PLUGIN_PREFIX);
+    		ForcePlayerSuicide(param1);
+    		CS_SwitchTeam(param1, CS_TEAM_T);
+  		}
+  	}
     else if (action == MenuAction_End)
     {
         delete menu;
@@ -76,7 +89,7 @@ void ShowQuestionMenu(int client)
     char title[128];
     sm.GetString("question", title, sizeof(title));
    
-    Menu menu = new Menu(MenuHandler_Quesiton);
+    Menu menu = new Menu(MenuHandler_Question);
     menu.SetTitle(title);
     
     char incorrect[3][128], correct[64];
@@ -101,7 +114,7 @@ void ShowQuestionMenu(int client)
     }
     
     menu.ExitButton = false;
-    menu.Display(client, 15);
+    menu.Display(client, 20);
 }
  
 bool LoadQuestions()
@@ -152,6 +165,6 @@ StringMap GetRandomQuestion()
  
 void Punish(int client)
 {
-    PrintToChat(client, "%s \x02Incorrect\x01, you're a bad CT.", PLUGIN_PREFIX);
-    CTBan_Client(client, 15, _, "CT Quiz - Failed quiz");
+    PrintToChat(client, "%s You answered \x02Incorrectly\x01. You can try to join CT again in %d mins.", PLUGIN_PREFIX, g_cvBanTime.IntValue);
+    CTBan_Client(client, g_cvBanTime.IntValue, _, "CT Quiz - Failed quiz");
 }
