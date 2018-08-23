@@ -17,20 +17,29 @@ public Plugin myinfo =
 ConVar g_cvBanTime;
 char g_sQuestionPath[PLATFORM_MAX_PATH];
 ArrayList g_alQuestions;
+bool g_bConfirmed[MAXPLAYERS + 1];
+char g_cChoice[MAXPLAYERS + 1][8];
  
 public void OnPluginStart()
 {
     HookEvent("player_team", Event_SwapTeam, EventHookMode_Pre);
-   
-    BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/ctquiz_questions.cfg");
-    g_alQuestions = CreateArray();
     
-    g_cvBanTime = CreateConVar("ctquiz_ctban_time", "10", "For how long the client is going to be ctbanned after answering incorrectly.", _,true, 1.0);
-    AutoExecConfig(true, "ctquiz");
-    
-    if (!LoadQuestions())
+    if (IsLateNight())
+  	{
+  		BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/ctquiz/ctquiz_questions_latenight.cfg");
+  	}
+    else
+	{
+		BuildPath(Path_SM, g_sQuestionPath, sizeof(g_sQuestionPath), "configs/ctquiz/ctquiz_questions_regular.cfg");
+	}
+	g_alQuestions = CreateArray();
+	
+	g_cvBanTime = CreateConVar("ctquiz_ctban_time", "10", "For how long the client is going to be ctbanned after answering incorrectly.", _,true, 1.0);
+	AutoExecConfig(true, "ctquiz");
+	
+	if (!LoadQuestions())
     {
-        SetFailState("Unable to locate Questions.cfg at %s", g_sQuestionPath);
+        SetFailState("Unable to locate ctquiz_questions.cfg at %s", g_sQuestionPath);
     }
 }
  
@@ -40,6 +49,7 @@ public Action Event_SwapTeam(Event event, const char[] name, bool dontBroadcast)
     if (team == CS_TEAM_CT)
     {
         int client = GetClientOfUserId(event.GetInt("userid"));
+        PrintToChat(client, "%s In order to join CT, you must answer the question given to you.", PLUGIN_PREFIX);
         ShowQuestionMenu(client);
     }
 }
@@ -54,15 +64,9 @@ public int MenuHandler_Question(Menu menu, MenuAction action, int param1, int pa
         {
             return;
         }
-
-        if (StrEqual(info, "correct", false))
-        {
-            PrintToChat(param1, "%s You're \x04correct\x01, you may join CT now.", PLUGIN_PREFIX);
-        }
-        else
-        {
-            Punish(param1);
-        }
+        
+        strcopy(g_cChoice[param1], sizeof(g_cChoice[]), info);
+        ShowConfirmMenu(param1);
     }
     else if (action == MenuAction_Cancel)
     {
@@ -73,8 +77,7 @@ public int MenuHandler_Question(Menu menu, MenuAction action, int param1, int pa
     	else if (param2 == MenuCancel_Interrupted)
     	{
     		PrintToChat(param1, "%s You have opened another menu. You have been swapped back to T.", PLUGIN_PREFIX);
-    		ForcePlayerSuicide(param1);
-    		CS_SwitchTeam(param1, CS_TEAM_T);
+    		SwapClient(param1);
   		}
   	}
     else if (action == MenuAction_End)
@@ -82,7 +85,60 @@ public int MenuHandler_Question(Menu menu, MenuAction action, int param1, int pa
         delete menu;
     }
 }
- 
+
+public int MenuHandler_Confirm(Menu menu, MenuAction action, int param1, int param2)
+{
+    if (action == MenuAction_Select)
+    {
+        char info[10];
+        char display[10];
+        if (!menu.GetItem(param2, info, sizeof(info), _, display, sizeof(display)))
+        {
+            return;
+        }
+        
+        if (StrEqual(info, "y", false))
+        {
+            g_bConfirmed[param1] = true;
+        }
+        else
+        {
+            SwapClient(param1);
+            g_bConfirmed[param1] = false;
+            PrintToChat(param1, "%s You have been swapped back to T.", PLUGIN_PREFIX);
+            return;
+        }
+        
+        if (StrEqual(g_cChoice[param1], "correct", false))
+        {
+            PrintToChat(param1, "%s You're \x04correct\x01, you may join CT now.", PLUGIN_PREFIX);
+        }
+        else
+        {
+            Punish(param1);
+        }
+    }
+    else if (action == MenuAction_Cancel)
+    {
+    	SwapClient(param1);
+    	g_bConfirmed[param1] = false;
+  	}
+    else if (action == MenuAction_End)
+    {
+        delete menu;
+    }
+}
+
+void ShowConfirmMenu(int client)
+{
+	Menu menu = new Menu(MenuHandler_Confirm);
+	menu.SetTitle("Are you sure thats the right answer?");
+	menu.AddItem("y", "Yes");
+	menu.AddItem("n", "No");
+	menu.ExitButton = false;
+	menu.Display(client, 20);
+}
+
 void ShowQuestionMenu(int client)
 {
     StringMap sm = GetRandomQuestion();
@@ -167,4 +223,20 @@ void Punish(int client)
 {
     PrintToChat(client, "%s You answered \x02Incorrectly\x01. You can try to join CT again in %d mins.", PLUGIN_PREFIX, g_cvBanTime.IntValue);
     CTBan_Client(client, g_cvBanTime.IntValue, _, "CT Quiz - Failed quiz");
+}
+
+bool IsLateNight()
+{
+	char timeBuf[4];
+	FormatTime(timeBuf, sizeof(timeBuf), "%H");
+	int hour = StringToInt(timeBuf);
+
+	return hour > 20 && hour < 5;
+}
+
+void SwapClient(int client)
+{
+	ForcePlayerSuicide(client);
+	CS_SwitchTeam(client, CS_TEAM_T);
+	g_bConfirmed[client] = false;
 }
